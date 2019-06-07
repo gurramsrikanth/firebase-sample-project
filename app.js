@@ -109,13 +109,13 @@ function getRealTimeUpdate(){
             var cell2 = row.insertCell(1);
             var cell3 = row.insertCell(2);
             var cell4 = row.insertCell(3);
-            var cell5 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
 
             cell1.innerHTML = doc.id;
             cell2.innerHTML = user.name;
             cell3.innerHTML = user.email;
             cell4.innerHTML = user.subscribe;
-            cell4.innerHTML = `<button type="button" onclick="removeDoc('${doc.id}')" class="btn btn-danger">Delete</button>`;
+            cell5.innerHTML = `<button type="button" onclick="removeDoc('${doc.id}')" class="btn btn-danger">Delete</button>`;
         });
     });
 }
