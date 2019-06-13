@@ -8,99 +8,53 @@ var firebaseConfig = {
   messagingSenderId: "",// yor MESSAGING_SENDER_ID goes here
   appId: ""// yor APP_ID goes here
 };
+
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();        
-const colRef = db.collection("users");
-const nameField=document.querySelector("#exampleInputUserName");
-const emailField=document.querySelector("#exampleInputEmail1");
-const subscribeCheckBox=document.querySelector("#exampleCheck1");
+var db = firebase.firestore();
+
 const submitButton=document.querySelector("#submitButton");
-const alertMessage=document.querySelector("#alertMessage")
+const emailField=document.querySelector("#exampleInputEmail1");
+const passwordField=document.querySelector("#exampleInputPassword1");
+const checkBoxField=document.querySelector("#exampleCheck1");
 var recordsTable = document.getElementById("dbRecords");
+const messages = document.getElementById("messages");
 
 function createDoc(user){
-    console.log("Creating doc with reference...", user);
-    // Write Data
-    colRef.add({
-        name: user.name,
+    // Add a new document in collection "cities"
+    db.collection("users").add({
         email: user.email,
-        subscribe: user.subscribe
+        password: user.password,
+        checked: user.checked
     })
     .then(function(docRef) {
-        console.log("Document created with ID: ", docRef.id);
+        sendMessage("Document \""+docRef.id+"\" successfully written!", "success")
     })
     .catch(function(error) {
-        console.error("Error adding document: ", error);
-    });        
-}
-
-function getAllDocs(){
-    // Read document
-    colRef.get().then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-            console.log(`${doc.id} => ${doc.data()}`);
-        });
+        sendMessage(error.message, "danger")        
     });
 }
 
-function updateDoc(docId, user){
-    //Updated document
-    var docRef = colRef.doc(docId);
-
-    docRef.update({
-        "name": user.name,
-        "email": user.email,
-        "subscribe": user.subscribe
-    })
-    .then(function() {
-        console.log("Document successfully updated!");
-    })
-    .catch(function(error) {
-        // The document probably doesn't exist.
-        console.error("Error updating document: ", error);
-    });        
-}
-
-function removeDoc(docId){
-    docId = docId.trim();
-    // Delete document
-    colRef.doc(docId).delete().then(function() {
-        displayAlert("Document successfully deleted! with ID"+ docId)
-
-    }).catch(function(error) {
-        console.error("Error removing document: ", error);
-    });
-}
-
-submitButton.addEventListener("click",function(){    
-    const name = nameField.value;
-    const email = emailField.value;
-    const subscribe = subscribeCheckBox.value;
-    // const user = {name: name, email: email, subscribe: subscribe};
-    console.log("name: ", name, "email ", email, "subscribe ", subscribe);
-    colRef.add({
-        name: name,
-        email: email,
-        subscribe: subscribe
-    })
-    .then(function(documentRef) {
-        displayAlert("Document created with ID: ", documentRef.id)
-    })
-    .catch(function(error) {
-        console.error("Error adding document: ", error);
-    }); 
-    getRealTimeUpdate(); 
+submitButton.addEventListener("click",function(event){
+    event.preventDefault();
+    event.stopPropagation();
+    const emailValue = emailField.value;
+    const passwordVale = passwordField.value;
+    const checkedValue = checkBoxField.value;
+    var user={email: emailValue, password: passwordVale, checked: checkedValue}
+    createDoc(user);
+    getRealTimeUpdate();
 });
 
-
-function displayAlert(message){
-    $("#dbAlert").addClass('show') 
-    alertMessage.innerHTML = message;
+function resetUserForm(){
+    emailField.value = '';
+    passwordField.value = '';
 }
 
 function getRealTimeUpdate(){
-    colRef.get().then(function(querySnapshot) {
+    resetUserForm();
+
+    db.collection("users").get().then(function(querySnapshot) {
         querySnapshot.forEach(function(doc) {
             const user=doc.data();
 
@@ -112,14 +66,33 @@ function getRealTimeUpdate(){
             var cell5 = row.insertCell(4);
 
             cell1.innerHTML = doc.id;
-            cell2.innerHTML = user.name;
-            cell3.innerHTML = user.email;
-            cell4.innerHTML = user.subscribe;
+            cell2.innerHTML = user.email;
+            cell3.innerHTML = user.password;
+            cell4.innerHTML = user.checked;
             cell5.innerHTML = `<button type="button" onclick="removeDoc('${doc.id}')" class="btn btn-danger">Delete</button>`;
         });
     });
 }
 getRealTimeUpdate();
 
+function removeDoc(docId){
+    docId = docId.trim();
+    // Delete document
+    db.collection("users").doc(docId).delete().then(function() {
+        sendMessage("Document \""+docId+"\" successfully deleted!", "success");        
 
- 
+    }).catch(function(error) {
+        sendMessage(error.message, "danger");
+    });
+}
+
+function sendMessage(message, alertClass){
+    var alert_message = `<div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>`
+    messages.innerHTML = alert_message;
+}
+    
